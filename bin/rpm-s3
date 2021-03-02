@@ -125,12 +125,10 @@ def sign(rpmfile):
     cmd = "rpm --resign '%s'" % rpmfile
     logging.info(cmd)
     try:
-        child = pexpect.spawn(cmd)
-        child.expect('Enter pass phrase: ')
-        child.sendline('')
-        child.expect(pexpect.EOF)
-    except pexpect.EOF, e:
-        print "Unable to sign package '%s' - %s" % (rpmfile, child.before)
+        subprocess.check_call(cmd)
+        logging.info("Successfully signed package")
+    except subprocess.CalledProcessError, e:
+        print "Unable to sign package '%s'" % (rpmfile)
         logging.error("Unable to sign package: %s", e)
         exit(1)
 
