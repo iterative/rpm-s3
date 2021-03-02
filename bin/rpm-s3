@@ -132,9 +132,9 @@ def sign(rpmfile):
         logging.error("Unable to sign package: %s", e)
         exit(1)
 
-def sign_metadata(repomdfile):
-    """Requires a proper ~/.rpmmacros file. See <http://fedoranews.org/tchung/gpg/>"""
-    cmd = ["gpg", "--detach-sign", "--armor", repomdfile]
+def sign_metadata(repomdfile, gpg_options):
+    opts = gpg_options.split() if gpg_options else []
+    cmd = ["gpg", "--detach-sign", "--armor"] + opts + [repomdfile]
     logging.info(cmd)
     try:
         subprocess.check_call(cmd)
@@ -226,7 +226,10 @@ def update_repodata(repopath, rpmfiles, options):
 
     # Generate repodata/repomd.xml.asc
     if options.sign:
-        sign_metadata(os.path.join(tmpdir, 'repodata', 'repomd.xml'))
+        sign_metadata(
+            os.path.join(tmpdir, 'repodata', 'repomd.xml'),
+            options.gpg_options,
+        )
 
     # Replace metadata on s3
     s3grabber.syncdir(os.path.join(tmpdir, 'repodata'), 'repodata')
@@ -252,6 +255,7 @@ if __name__ == '__main__':
     parser.add_option('-v', '--verbose', action='count', default=0)
     parser.add_option('--visibility', default='private')
     parser.add_option('-s', '--sign', action='count', default=0)
+    parser.add_option('--gpg-options')
     parser.add_option('-l', '--logfile')
     parser.add_option('-d', '--delete', action='store_true', default=False)
     parser.add_option('-r', '--region')
